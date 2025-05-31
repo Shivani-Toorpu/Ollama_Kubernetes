@@ -1,0 +1,7 @@
+pymilvus
+sentence-transformers
+requests
+tiktoken
+torch
+transformers
+numpy

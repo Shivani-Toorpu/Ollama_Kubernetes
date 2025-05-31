@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeflow-backend
+  namespace: default
+  labels:
+    app: kubeflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubeflow-backend
+  template:
+    metadata:
+      labels:
+        app: kubeflow-backend
+    spec:
+      containers:
+      - name: backend
+        image: kubeflow-backend:latest
+        imagePullPolicy: Never  # Use local image built with kind
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MILVUS_HOST
+          value: "my-release-milvus"  # Replace with actual service name
+        - name: MILVUS_PORT
+          value: "19530"
+        - name: OLLAMA_HOST
+          value: "ollama-service"
+        - name: OLLAMA_PORT
+          value: "11434"       
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeflow-backend-service
+  namespace: default
+spec:
+  selector:
+    app: kubeflow-backend
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+    nodePort: 30080
+  type: NodePort  # Exposed for external access

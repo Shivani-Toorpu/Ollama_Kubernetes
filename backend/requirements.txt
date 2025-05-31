@@ -1,0 +1,10 @@
+fastapi>=0.95.0,<1.0.0
+httpx>=0.24.0,<1.0.0
+uvicorn[standard]>=0.22.0,<1.0.0
+pymilvus
+sentence-transformers
+requests
+tiktoken
+torch
+transformers
+numpy
