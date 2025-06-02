@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ollama-deployment
-  namespace: default
   labels:
     app: ollama
+  name: ollama
+  namespace: ollama
 spec:
   replicas: 1
   selector:
@@ -14,10 +14,10 @@ spec:
     metadata:
       labels:
         app: ollama
-    spec:
+    spec:  
       containers:
-      - name: ollama
-        image: ollama/ollama:latest
+      - image: ollama/ollama:latest
+        name: ollama
         ports:
         - containerPort: 11434
         env:
@@ -30,58 +30,18 @@ spec:
           mountPath: /root/.ollama
         resources:
           requests:
-            memory: "4Gi"
-            cpu: "2000m"
-          limits:
-            memory: "6Gi"
-            cpu: "3000m"
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 11434
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 11434
-          initialDelaySeconds: 60
-          periodSeconds: 30
-      volumes:
-      - name: ollama-data
-        emptyDir: {}
-      initContainers:
-      - name: model-downloader
-        image: ollama/ollama:latest
-        command: ["/bin/sh"]
-        args:
-        - -c
-        - |
-          ollama serve &
-          sleep 10
-          ollama pull llama3.2:3b
-          pkill ollama
-        volumeMounts:
-        - name: ollama-data
-          mountPath: /root/.ollama
-        resources:
-          requests:
             memory: "2Gi"
             cpu: "1000m"
           limits:
             memory: "4Gi"
             cpu: "2000m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ollama-service
-  namespace: default
-spec:
-  selector:
-    app: ollama
-  ports:
-  - protocol: TCP
-    port: 11434
-    targetPort: 11434
-  type: ClusterIP  # Internal only - not exposed outside cluster
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "/bin/sh"
+                - "-c"
+                - "sleep 10 && curl -X POST http://localhost:11434/api/pull -H 'Content-Type: application/json' -d '{\"name\": \"llama3.2:3b\"}'"
+      volumes:
+      - name: ollama-data
+        emptyDir: {}
